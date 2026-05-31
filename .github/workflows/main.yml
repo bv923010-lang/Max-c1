@@ -1,13 +1,66 @@
-name: Belal-BotX666-MAX
+name: BELAL BOT
 
-# এটি শুধুমাত্র ম্যানুয়ালি রান করার জন্য, নিজে ক্লিক না করলে কিছুই হবে না
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
-  display_structure:
+  bot:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
     steps:
-      - name: System Status
-        run: echo "Repository decoration setup is completed successfully!"
-        
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg --fix-missing || true
+
+      - name: Inject API keys into config.json
+        run: |
+          node -e "
+          const fs=require('fs');
+          const c=JSON.parse(fs.readFileSync('config.json','utf-8'));
+          c.APIKEYS.GROQ        = process.env.GROQ_KEY       || '';
+          c.APIKEYS.GROQ2       = process.env.GROQ_KEY2      || '';
+          c.APIKEYS.GROQ3       = process.env.GROQ_KEY3      || '';
+          c.APIKEYS.GROQ4       = process.env.GROQ_KEY4      || '';
+          c.APIKEYS.GEMINI      = process.env.GEMINI_KEY     || '';
+          c.APIKEYS.GEMINI2     = process.env.GEMINI_KEY2    || '';
+          c.APIKEYS.GEMINI3     = process.env.GEMINI_KEY3    || '';
+          c.APIKEYS.GEMINI4     = process.env.GEMINI_KEY4    || '';
+          c.APIKEYS.VOICERSS    = process.env.VOICERSS_KEY   || '';
+          fs.writeFileSync('config.json',JSON.stringify(c,null,2));
+          console.log('✅ All API keys injected');
+          "
+        env:
+          GROQ_KEY:      ${{ secrets.GROQ_KEY }}
+          GROQ_KEY2:     ${{ secrets.GROQ_KEY2 }}
+          GROQ_KEY3:     ${{ secrets.GROQ_KEY3 }}
+          GROQ_KEY4:     ${{ secrets.GROQ_KEY4 }}
+          GEMINI_KEY:    ${{ secrets.GEMINI_KEY }}
+          GEMINI_KEY2:   ${{ secrets.GEMINI_KEY2 }}
+          GEMINI_KEY3:   ${{ secrets.GEMINI_KEY3 }}
+          GEMINI_KEY4:   ${{ secrets.GEMINI_KEY4 }}
+          VOICERSS_KEY:  ${{ secrets.VOICERSS_KEY }}
+
+      - run: npm install --legacy-peer-deps
+
+      - name: Run Bot
+        run: node index.js
+        timeout-minutes: 350
+        env:
+          NODE_ENV:      production
+          TZ:            Asia/Dhaka
+          GROQ_KEY:      ${{ secrets.GROQ_KEY }}
+          GROQ_KEY2:     ${{ secrets.GROQ_KEY2 }}
+          GROQ_KEY3:     ${{ secrets.GROQ_KEY3 }}
+          GROQ_KEY4:     ${{ secrets.GROQ_KEY4 }}
+          GEMINI_KEY:    ${{ secrets.GEMINI_KEY }}
+          GEMINI_KEY2:   ${{ secrets.GEMINI_KEY2 }}
+          GEMINI_KEY3:   ${{ secrets.GEMINI_KEY3 }}
+          GEMINI_KEY4:   ${{ secrets.GEMINI_KEY4 }}
+          VOICERSS_KEY:  ${{ secrets.VOICERSS_KEY }}
+          
