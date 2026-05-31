@@ -1,64 +1,75 @@
-const fs = require("fs");
-const axios = require("axios");
+/*
+ * catbox.js — Fixed v2.0
+ * ✅ utils/index dependency সরানো হয়েছে
+ * ✅ inline downloadFile function
+ * ✅ cache/ folder auto-create
+ */
+const fs       = require("fs-extra");
+const axios    = require("axios");
+const path     = require("path");
 const FormData = require("form-data");
-const { downloadFile } = require("../../utils/index");
 
 module.exports.config = {
- name: "catbox",
- version: "1.0.0",
- hasPermssion: 0,
- credits: "ULLASH",
- description: "Upload media to Catbox",
- commandCategory: "media",
- usages: "[reply to image/video/audio]",
- cooldowns: 5
+  name: "catbox",
+  version: "2.0.0",
+  hasPermssion: 0,
+  credits: "ULLASH — Fixed by Belal YT",
+  description: "Upload media to Catbox.moe and get direct link",
+  commandCategory: "media",
+  usages: "[reply to image/video/audio]",
+  cooldowns: 5,
 };
 
 module.exports.run = async ({ api, event }) => {
- const { threadID, type, messageReply, messageID } = event;
+  const { threadID, type, messageReply, messageID } = event;
 
- if (type !== "message_reply" || !messageReply.attachments || messageReply.attachments.length === 0) {
- return api.sendMessage("❐ Please reply to a photo/video/audio file.", threadID, messageID);
- }
+  if (type !== "message_reply" || !messageReply?.attachments?.length)
+    return api.sendMessage("❐ একটা ছবি/ভিডিও/অডিওতে reply করে /catbox লেখো।", threadID, messageID);
 
- const attachmentPaths = [];
+  const cacheDir = path.join(process.cwd(), "tmp");
+  await fs.ensureDir(cacheDir);
 
- async function getAttachments(attachments) {
- let index = 0;
- for (const data of attachments) {
- const ext = data.type === "photo" ? "jpg" :
- data.type === "video" ? "mp4" :
- data.type === "audio" ? "mp3" :
- data.type === "animated_image" ? "gif" : "dat";
- const filePath = __dirname + `/cache/${index}.${ext}`;
- await downloadFile(data.url, filePath);
- attachmentPaths.push(filePath);
- index++;
- }
- }
+  const filePaths = [];
 
- await getAttachments(messageReply.attachments);
+  // Download attachments
+  for (let i = 0; i < messageReply.attachments.length; i++) {
+    const data = messageReply.attachments[i];
+    const ext  = data.type === "photo" ? "jpg"
+               : data.type === "video" ? "mp4"
+               : data.type === "audio" ? "mp3"
+               : data.type === "animated_image" ? "gif" : "dat";
+    const filePath = path.join(cacheDir, `catbox_${Date.now()}_${i}.${ext}`);
+    try {
+      const res = await axios.get(data.url, { responseType: "arraybuffer", timeout: 30000 });
+      await fs.writeFile(filePath, Buffer.from(res.data));
+      filePaths.push(filePath);
+    } catch (e) {
+      api.sendMessage(`❌ ফাইল ডাউনলোড ব্যর্থ: ${e.message?.slice(0,80)}`, threadID, messageID);
+    }
+  }
 
- let msg = "";
+  if (!filePaths.length) return;
 
- for (const filePath of attachmentPaths) {
- try {
- const form = new FormData();
- form.append("reqtype", "fileupload");
- form.append("fileToUpload", fs.createReadStream(filePath));
+  let msg = "📦 Catbox Upload Results:\n";
 
- const response = await axios.post("https://catbox.moe/user/api.php", form, {
- headers: form.getHeaders(),
- });
+  for (const filePath of filePaths) {
+    try {
+      const form = new FormData();
+      form.append("reqtype", "fileupload");
+      form.append("fileToUpload", fs.createReadStream(filePath));
 
- msg += `${response.data.trim()}\n`;
- } catch (err) {
- console.error("Catbox upload failed:", err);
- msg += "❌ Upload failed for one file.\n";
- } finally {
- fs.unlinkSync(filePath);
- }
- }
+      const res = await axios.post("https://catbox.moe/user/api.php", form, {
+        headers: form.getHeaders(),
+        timeout: 60000,
+      });
+      msg += `✅ ${res.data.trim()}\n`;
+    } catch (err) {
+      msg += `❌ Upload failed: ${err.message?.slice(0,60)}\n`;
+    } finally {
+      await fs.remove(filePath).catch(() => {});
+    }
+  }
 
- return api.sendMessage(msg.trim(), threadID, messageID);
+  return api.sendMessage(msg.trim(), threadID, messageID);
 };
+                  
