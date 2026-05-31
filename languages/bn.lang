@@ -1,0 +1,99 @@
+# ╔══════════════════════════════════════════════════╗
+# ║   🤖 BELAL BOTX666 — বাংলা ভাষা ফাইল           ║
+# ║   Master: Belal YT | Version: 6.6.6             ║
+# ╚══════════════════════════════════════════════════╝
+# ℹ️  নতুন লাইন যোগ করতে \n ব্যবহার করুন
+# ℹ️  # দিয়ে শুরু হওয়া লাইন মন্তব্য হিসেবে গণ্য হয়
+
+# ━━━ Main System ━━━
+Main.botStarted=🤖 BELAL BOTX666 চালু হয়েছে!
+Main.botStopped=🔴 বট বন্ধ হয়েছে।
+Main.configLoaded=✅ কনফিগ লোড সফল।
+Main.dbConnected=✅ ডেটাবেস সংযুক্ত হয়েছে।
+Main.dbFailed=❌ ডেটাবেস সংযোগ ব্যর্থ: %1
+Main.appstateOk=✅ Facebook appstate লোড সফল।
+Main.appstateFail=❌ appstate.json পাওয়া যায়নি বা ভুল!
+Main.loginOk=✅ Facebook লগইন সফল! UID: %1
+Main.loginFail=❌ Facebook লগইন ব্যর্থ। নতুন cookie দিন।
+Main.commandLoaded=✅ %1টি কমান্ড লোড হয়েছে।
+Main.eventLoaded=✅ %1টি ইভেন্ট লোড হয়েছে।
+Main.autoRestart=⚠️ বট পুনরায় চালু হচ্ছে...
+Main.crashSaved=💾 ক্র্যাশ লগ সংরক্ষিত হয়েছে।
+
+# ━━━ Command Handler ━━━
+handleCommand.userBanned=🚫 আপনি ব্যান হয়েছেন!\n📅 তারিখ: %1\n📝 কারণ: %2\n📞 যোগাযোগ: 01913246554
+handleCommand.threadBanned=🚫 এই গ্রুপ ব্যান হয়েছে!\n📅 তারিখ: %1\n📝 কারণ: %2
+handleCommand.commandNotExist=❓ "%1" কমান্ড পাওয়া যায়নি!\n💡 কাছাকাছি: %2\n📋 সব কমান্ড দেখতে /help লিখুন।
+handleCommand.permssionNotEnough=🔐 এই কমান্ড ব্যবহার করার অনুমতি নেই!\n🔑 প্রয়োজনীয় স্তর: %1
+handleCommand.cooldown=⏳ একটু অপেক্ষা করুন!\n⏱️ %1 সেকেন্ড পরে আবার চেষ্টা করুন।
+handleCommand.commandError=❌ কমান্ড চালাতে সমস্যা!\n🔧 কমান্ড: %1\n📛 ত্রুটি: %2
+handleCommand.commandDisabled=⛔ "%1" কমান্ড বর্তমানে বন্ধ আছে।
+handleCommand.commandThreadBanned=⛔ এই গ্রুপে "%1" কমান্ড নিষিদ্ধ।
+handleCommand.commandUserBanned=⛔ আপনার জন্য "%1" কমান্ড নিষিদ্ধ।
+handleCommand.adminOnly=⛔ শুধুমাত্র বট অ্যাডমিন এই কমান্ড ব্যবহার করতে পারবেন।
+handleCommand.groupOnly=⛔ এই কমান্ড শুধুমাত্র গ্রুপে ব্যবহার করা যায়।
+handleCommand.inboxOnly=⛔ এই কমান্ড শুধুমাত্র ইনবক্সে ব্যবহার করা যায়।
+
+# ━━━ Welcome / Leave ━━━
+welcome.joined=🎉 স্বাগতম %1!\n🏠 গ্রুপে: %2\n👥 মোট সদস্য: %3\n\n🤖 আমি BELAL BOTX666\n📋 কমান্ড দেখতে /help লিখুন।
+welcome.left=👋 বিদায় %1!\n😢 আমরা তোমাকে মিস করব।
+welcome.botAdded=✅ বট যোগ করেছেন: %1\n🆔 গ্রুপ ID: %2
+welcome.botRemoved=⚠️ বট সরিয়েছেন: %1\n🆔 ID: %2
+
+# ━━━ AI Command ━━━
+ai.usage=🤖 AI ব্যবহার:\n• /ai [প্রশ্ন]\n• যেকোনো মেসেজ reply করে /ai\n\nউদাহরণ: /ai বাংলাদেশের রাজধানী কী?
+ai.thinking=⏳ ভাবছি...
+ai.error=❌ AI থেকে উত্তর পাওয়া যায়নি। আবার চেষ্টা করুন।
+ai.noInput=❓ কিছু জিজ্ঞেস করুন!\nউদাহরণ: /ai তুমি কে?
+
+# ━━━ Help Command ━━━
+help.header=🤖 BELAL BOTX666 — কমান্ড তালিকা\n✡️ চাঁদের পাহাড় | Master: Belal YT\n━━━━━━━━━━━━━━━━━━━━
+help.footer=━━━━━━━━━━━━━━━━━━━━\n📋 মোট কমান্ড: %1\n💡 বিস্তারিত: /help [কমান্ড নাম]\n📞 সাহায্য: 01913246554
+help.notFound=❌ "%1" কমান্ড পাওয়া যায়নি।
+help.commandInfo=📌 কমান্ড: %1\n📝 বিবরণ: %2\n⚡ ব্যবহার: %3\n⏱️ কুলডাউন: %4s\n🔑 অনুমতি: %5
+
+# ━━━ Admin Commands ━━━
+admin.banned=✅ %1 কে ব্যান করা হয়েছে।\n📝 কারণ: %2
+admin.unbanned=✅ %1 এর ব্যান তুলে নেওয়া হয়েছে।
+admin.kicked=✅ %1 কে গ্রুপ থেকে বের করা হয়েছে।
+admin.notFound=❌ ইউজার পাওয়া যায়নি।
+admin.alreadyBanned=⚠️ এই ইউজার আগেই ব্যান আছেন।
+admin.notBanned=⚠️ এই ইউজার ব্যান নেই।
+admin.noPermission=🔐 এই কাজের অনুমতি নেই।
+admin.tagAll=📢 সবাইকে ট্যাগ করা হচ্ছে...
+admin.restarting=🔄 বট পুনরায় চালু হচ্ছে...
+admin.shutdown=🔴 বট বন্ধ করা হচ্ছে...
+
+# ━━━ Economy ━━━
+economy.balance=💰 আপনার ব্যালেন্স: %1 টাকা\n🏦 ব্যাংক: %2 টাকা
+economy.dailyClaimed=✅ দৈনিক পুরস্কার পেয়েছেন: %1 টাকা!\n⏰ পরের পুরস্কার: %2 ঘন্টা পরে
+economy.dailyAlready=⏳ আজকের পুরস্কার নিয়েছেন!\n⏰ পরের পুরস্কার: %1 পরে
+economy.notEnough=❌ যথেষ্ট টাকা নেই!\n💰 আপনার কাছে: %1 টাকা
+economy.transferred=✅ %1 টাকা %2 কে পাঠানো হয়েছে।
+
+# ━━━ Rank System ━━━
+rank.levelUp=🎉 অভিনন্দন! লেভেল আপ!\n⬆️ %1 → %2\n🏆 নতুন পদবী: %3
+rank.profile=👤 প্রোফাইল: %1\n⭐ লেভেল: %2\n📊 EXP: %3/%4\n🏆 পদবী: %5
+
+# ━━━ Games ━━━
+game.win=🎉 আপনি জিতেছেন! +%1 টাকা
+game.lose=😢 আপনি হেরেছেন! -%1 টাকা
+game.draw=🤝 ড্র হয়েছে!
+game.noBalance=❌ খেলার জন্য যথেষ্ট টাকা নেই!
+game.betTooLow=❌ বেট কমপক্ষে %1 টাকা হতে হবে।
+game.betTooHigh=❌ বেট সর্বোচ্চ %1 টাকা হতে পারবে।
+
+# ━━━ Music ━━━
+music.searching=🔍 "%1" খুঁজছি...
+music.notFound=❌ "%1" গান খুঁজে পাওয়া যায়নি।
+music.downloading=⬇️ ডাউনলোড হচ্ছে...
+music.tooLong=❌ গানটি অনেক লম্বা! সর্বোচ্চ %1 মিনিট।
+music.error=❌ গান ডাউনলোড করতে সমস্যা হয়েছে।
+
+# ━━━ Error Messages ━━━
+error.apiError=❌ API সমস্যা হয়েছে। একটু পরে চেষ্টা করুন।
+error.networkError=❌ নেটওয়ার্ক সমস্যা। ইন্টারনেট চেক করুন।
+error.timeout=❌ সময় শেষ হয়ে গেছে। আবার চেষ্টা করুন।
+error.fileNotFound=❌ ফাইল পাওয়া যায়নি।
+error.invalidInput=❌ ভুল ইনপুট! সঠিকভাবে লিখুন।
+error.unknown=❌ অজানা সমস্যা হয়েছে। অ্যাডমিনকে জানান।
