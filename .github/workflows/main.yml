@@ -1,0 +1,16 @@
+# =======================================================
+#  Belal-BotX666-MAX Deployment Workflow (Currently Disabled)
+# =======================================================
+# এই ফাইলটি বর্তমানে সম্পূর্ণ নিষ্ক্রিয় (Disabled) করে রাখা হয়েছে।
+# এটি শুধুমাত্র রিপোজিটরি সাজানোর জন্য দেওয়া হয়েছে, কোনো অ্যাকশন রান হবে না।
+# ভবিষ্যতে যখন বট চালু করবেন, তখন নিচের কোডগুলো ব্যবহার করতে পারবেন।
+
+# name: Belal-BotX666-MAX Deployment
+# on:
+#   workflow_dispatch:
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Code Status
+#         run: echo "Repository structure is beautifully decorated!"
