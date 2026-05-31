@@ -1,10 +1,8 @@
 /*
- * video.js — Fixed v3.3
- * ✅ GoatWrapper নেই — সরাসরি কাজ করে
- * ✅ onStart ফাংশন (GoatBot style)
- * ✅ External API দিয়ে download (ytdl লাগে না)
- * ✅ cache/ folder auto-create
- * ✅ handleReply — number দিয়ে select
+ * video.js — Fixed v3.4
+ * ✅ Facebook block এর জন্য delay যোগ করা হয়েছে
+ * ✅ uploadAttachment error ধরা হয়েছে
+ * ✅ retry সিস্টেম যোগ করা হয়েছে
  */
 const axios  = require("axios");
 const fs     = require("fs-extra");
@@ -18,17 +16,42 @@ const getApi = async () => {
   return r.data.api;
 };
 
+// ✅ FIX: delay helper — Facebook block এড়াতে
+const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
+// ✅ FIX: retry wrapper — upload fail হলে আবার চেষ্টা
+async function sendWithRetry(api, msgObj, threadID, messageID, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      if (i > 0) await delay(3000 * i); // প্রতিবার বেশি delay
+      return await new Promise((resolve, reject) => {
+        api.sendMessage(msgObj, threadID, (err, info) => {
+          if (err) return reject(err);
+          resolve(info);
+        }, messageID);
+      });
+    } catch (err) {
+      const isBlock = err?.error === 3252001 ||
+                      JSON.stringify(err).includes("Temporarily Blocked");
+      if (isBlock && i < retries) {
+        global.log?.warn(`FB Block detected — ${(i+1)*3}s delay করে retry...`);
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 module.exports = {
   config: {
     name: "video",
-    version: "3.3.0",
+    version: "3.4.0",
     author: "Belal YT",
-    countDown: 10,
+    countDown: 15,
     role: 0,
     hasPermssion: 0,
     shortDescription: "YouTube ভিডিও/অডিও ডাউনলোড",
-    longDescription: "YouTube search করে ভিডিও বা অডিও ডাউনলোড করে পাঠায়",
-    category: "media",
+    category: "🎵 মিডিয়া",
     guide: { en: "{pn} -v <নাম>  |  {pn} -a <নাম>  |  {pn} -i <নাম>" },
   },
 
@@ -41,14 +64,14 @@ module.exports = {
       action = "-v";
     }
 
-    const ytReg = /^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))((\w|-){11})(?:\S+)?$/;
+    const ytReg = /^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))(([\w-]){11})(?:\S+)?$/;
     const isUrl = args[1] ? ytReg.test(args[1]) : false;
 
-    // ── Direct URL ──────────────────────────────────────────
     if (isUrl) {
       const fmt = ["-v","video","mp4"].includes(action) ? "mp4" : "mp3";
       const vid = args[1].match(ytReg)?.[1];
       if (!vid) return api.sendMessage("❌ YouTube লিংক সঠিক নয়।", threadID, messageID);
+
       try {
         api.setMessageReaction("⏳", messageID, () => {}, true);
         const base = await getApi();
@@ -60,19 +83,30 @@ module.exports = {
         const filePath = path.join(cacheDir, `vid_${Date.now()}.${fmt}`);
         const buf = (await axios.get(downloadLink, { responseType: "arraybuffer", timeout: 60000 })).data;
         await fs.writeFile(filePath, Buffer.from(buf));
-        await api.sendMessage(
+
+        // ✅ delay দিয়ে পাঠাও
+        await delay(1500);
+        await sendWithRetry(
+          api,
           { body: `${fmt==="mp4"?"🎬":"🎵"} ${title}\n📊 ${quality}`, attachment: fs.createReadStream(filePath) },
-          threadID, () => fs.remove(filePath).catch(()=>{}), messageID
+          threadID, messageID
         );
+        await fs.remove(filePath).catch(() => {});
         api.setMessageReaction("✅", messageID, () => {}, true);
       } catch (e) {
+        const isBlock = JSON.stringify(e).includes("Temporarily Blocked");
         api.setMessageReaction("❌", messageID, () => {}, true);
-        api.sendMessage(`❌ ডাউনলোড ব্যর্থ: ${e.message?.slice(0,100)}`, threadID, messageID);
+        api.sendMessage(
+          isBlock
+            ? "⚠️ Facebook সাময়িক block করেছে!\n⏳ ১০-৩০ মিনিট পর আবার চেষ্টা করুন।"
+            : `❌ ডাউনলোড ব্যর্থ: ${e.message?.slice(0,100)}`,
+          threadID, messageID
+        );
       }
       return;
     }
 
-    // ── Search ──────────────────────────────────────────────
+    // Search
     args.shift();
     const keyword = args.join(" ").trim();
     if (!keyword) return api.sendMessage(
@@ -102,6 +136,7 @@ module.exports = {
         if (err || !info) return;
         global.client.handleReply.push({
           name: "video",
+          commandName: "video",
           messageID: info.messageID,
           author: senderID,
           result: results,
@@ -125,7 +160,6 @@ module.exports = {
     const vid = result[choice - 1];
     try { await api.unsendMessage(handleReply.messageID); } catch {}
 
-    // Info mode
     if (["-i","info"].includes(action)) {
       try {
         api.setMessageReaction("⏳", messageID, () => {}, true);
@@ -133,7 +167,7 @@ module.exports = {
         const { data: d } = await axios.get(`${base}/ytfullinfo?videoID=${vid.id}`, { timeout: 15000 });
         const thumb = await streamImg(d.thumbnail, "info.jpg");
         api.sendMessage({
-          body: `✨ ${d.title}\n⏳ ${(d.duration/60).toFixed(1)} min\n👀 ${d.view_count} views\n👍 ${d.like_count} likes\n📢 ${d.channel}\n🔗 ${d.webpage_url}`,
+          body: `✨ ${d.title}\n⏳ ${(d.duration/60).toFixed(1)} min\n👀 ${d.view_count} views\n📢 ${d.channel}`,
           attachment: thumb,
         }, threadID, messageID);
         api.setMessageReaction("✅", messageID, () => {}, true);
@@ -155,20 +189,34 @@ module.exports = {
       const filePath = path.join(cacheDir, `vid_${Date.now()}.${fmt}`);
       const buf = (await axios.get(downloadLink, { responseType: "arraybuffer", timeout: 60000 })).data;
       await fs.writeFile(filePath, Buffer.from(buf));
-      await api.sendMessage(
+
+      // ✅ delay দিয়ে পাঠাও
+      await delay(1500);
+      await sendWithRetry(
+        api,
         { body: `${fmt==="mp4"?"🎬":"🎵"} ${title}\n📊 ${quality}`, attachment: fs.createReadStream(filePath) },
-        threadID, () => fs.remove(filePath).catch(()=>{}), messageID
+        threadID, messageID
       );
+      await fs.remove(filePath).catch(() => {});
       api.setMessageReaction("✅", messageID, () => {}, true);
     } catch (e) {
+      const isBlock = JSON.stringify(e).includes("Temporarily Blocked");
       api.setMessageReaction("❌", messageID, () => {}, true);
-      api.sendMessage(`❌ ডাউনলোড ব্যর্থ: ${e.message?.slice(0,100)}`, threadID, messageID);
+      api.sendMessage(
+        isBlock
+          ? "⚠️ Facebook সাময়িক block করেছে!\n⏳ কিছুক্ষণ পর আবার চেষ্টা করুন।"
+          : `❌ ডাউনলোড ব্যর্থ: ${e.message?.slice(0,100)}`,
+        threadID, messageID
+      );
     }
   },
+
+  run: async function (ctx) { return module.exports.onStart(ctx); },
 };
 
 async function streamImg(url, name) {
   const r = await axios.get(url, { responseType: "stream", timeout: 10000 });
   r.data.path = name;
   return r.data;
-}
+    }
+                               
