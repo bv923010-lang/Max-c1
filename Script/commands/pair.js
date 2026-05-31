@@ -1,110 +1,101 @@
+/*
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  💑 pair.js — ক্যানভাস ছাড়া pair সিস্টেম
+  BELAL BOTX666 | Master: Belal YT
+  🔧 FIX: canvas মডিউল সম্পূর্ণ বাদ
+  ✅ some-random-api দিয়ে ship ছবি বানায়
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+*/
+"use strict";
 const axios = require("axios");
-const { createCanvas, loadImage } = require("canvas");
-const fs = require("fs");
-const path = require("path");
+const { Readable } = require("stream");
 
 module.exports = {
   config: {
     name: "pair",
-    author: "Ew'r Saim X Ariyan",
-    category: "love",
+    aliases: ["love", "couple", "পেয়ার"],
+    version: "4.0.0",
+    author: "Belal YT",
+    category: "💑 ফান",
+    description: "গ্রুপের কারো সাথে pair করো",
+    usage: "/pair",
+    cooldowns: 10,
+    hasPermssion: 0,
   },
 
-  onStart: async function ({ api, event, usersData }) {
+  onStart: async function ({ api, event }) {
+    const { threadID, messageID, senderID } = event;
+
     try {
-      const senderData = await usersData.get(event.senderID);
-      const senderName = senderData.name;
-      const threadData = await api.getThreadInfo(event.threadID);
-      const users = threadData.userInfo;
+      api.setMessageReaction("💑", messageID, () => {}, true);
 
-      const myData = users.find((user) => user.id === event.senderID);
-      if (!myData || !myData.gender) {
-        return api.sendMessage("⚠️ Could not determine your gender.", event.threadID, (err) => {}, event.messageID);
+      // গ্রুপের সদস্য তালিকা
+      const threadInfo = await api.getThreadInfo(threadID);
+      const members = (threadInfo?.participantIDs || [])
+        .filter(id => String(id) !== String(senderID) &&
+                      String(id) !== String(global.config?.botID));
+
+      if (members.length === 0)
+        return api.sendMessage("❌ গ্রুপে pair করার মতো কেউ নেই!", threadID, messageID);
+
+      // র‍্যান্ডম একজন বেছে নাও
+      const partnerId = members[Math.floor(Math.random() * members.length)];
+
+      // দুজনের নাম বের করো
+      const [info1, info2] = await Promise.all([
+        api.getUserInfo(senderID).catch(() => null),
+        api.getUserInfo(partnerId).catch(() => null),
+      ]);
+      const name1 = info1?.[senderID]?.name   || "তুমি";
+      const name2 = info2?.[partnerId]?.name  || "সে";
+
+      // প্রোফাইল ছবির URL
+      const pic1 = `https://graph.facebook.com/${senderID}/picture?width=512&height=512&type=large`;
+      const pic2 = `https://graph.facebook.com/${partnerId}/picture?width=512&height=512&type=large`;
+
+      // some-random-api ship ছবি
+      const shipUrl = `https://some-random-api.com/canvas/misc/ship` +
+        `?avatar=${encodeURIComponent(pic1)}&partnersAvatar=${encodeURIComponent(pic2)}`;
+
+      const love = Math.floor(Math.random() * 31) + 70; // ৭০-১০০%
+      const loveBar = "❤️".repeat(Math.floor(love / 10)) + "🖤".repeat(10 - Math.floor(love / 10));
+
+      const msg =
+        `╔══════════════════════════╗\n` +
+        `║    💑 পেয়ার রিপোর্ট     ║\n` +
+        `╚══════════════════════════╝\n\n` +
+        `👤 ${name1}\n` +
+        `        ❤️\n` +
+        `👤 ${name2}\n\n` +
+        `${loveBar}\n` +
+        `💕 ভালোবাসার মিল: ${love}%\n\n` +
+        (love >= 90 ? "🔥 পারফেক্ট ম্যাচ! তোমরা একে অপরের জন্যই তৈরি!" :
+         love >= 80 ? "💖 দারুণ মিল! তোমাদের ভবিষ্যৎ উজ্জ্বল!" :
+         love >= 70 ? "😊 ভালোই আছে! একটু চেষ্টা করলেই পারফেক্ট!" :
+         "🙈 একটু কম মিল, কিন্তু ভালোবাসায় সব হয়!") +
+        `\n\n┄┉❈✡️⋆⃝চাঁদেড়~পাহাড়🪬❈┉┄`;
+
+      // ship ছবি নামাও
+      try {
+        const res = await axios.get(shipUrl, { responseType: "arraybuffer", timeout: 15000 });
+        const buf = Buffer.from(res.data);
+        const stream = Readable.from(buf);
+        stream.path = "pair.png";
+
+        api.setMessageReaction("✅", messageID, () => {}, true);
+        return api.sendMessage({ body: msg, attachment: stream }, threadID, messageID);
+      } catch {
+        // ছবি না পেলে শুধু টেক্সট পাঠাও
+        api.setMessageReaction("✅", messageID, () => {}, true);
+        return api.sendMessage(msg, threadID, messageID);
       }
 
-      const myGender = myData.gender.toUpperCase();
-      let matchCandidates = [];
-
-      if (myGender === "MALE") {
-        matchCandidates = users.filter(user => user.gender === "FEMALE" && user.id !== event.senderID);
-      } else if (myGender === "FEMALE") {
-        matchCandidates = users.filter(user => user.gender === "MALE" && user.id !== event.senderID);
-      } else {
-        return api.sendMessage("⚠️ Your gender is undefined. Cannot find a match.", event.threadID, (err) => {}, event.messageID);
-      }
-
-      if (matchCandidates.length === 0) {
-        return api.sendMessage("❌ No suitable match found in the group.", event.threadID, (err) => {}, event.messageID);
-      }
-
-      const selectedMatch = matchCandidates[Math.floor(Math.random() * matchCandidates.length)];
-      const matchName = selectedMatch.name;
-
-      const width = 800;
-      const height = 400;
-      const canvas = createCanvas(width, height);
-      const ctx = canvas.getContext("2d");
-
-      // ✅ Use your given background
-      const background = await loadImage("https://i.postimg.cc/pdv5dFVX/611905695-855684437229208-8377464727643815456-n.png");
-      ctx.drawImage(background, 0, 0, width, height);
-
-      // Load profile pictures
-      const sIdImage = await loadImage(
-        `https://graph.facebook.com/${event.senderID}/picture?width=720&height=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`
-      );
-      const pairPersonImage = await loadImage(
-        `https://graph.facebook.com/${selectedMatch.id}/picture?width=720&height=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`
-      );
-
-      // Draw circular avatars (same position)
-      function drawCircle(ctx, img, x, y, size) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(img, x, y, size, size);
-        ctx.restore();
-      }
-
-      drawCircle(ctx, sIdImage, 385, 40, 170);
-      drawCircle(ctx, pairPersonImage, width - 213, 190, 170);
-
-      // Save to file
-      const outputPath = path.join(__dirname, "pair_output.png");
-      const out = fs.createWriteStream(outputPath);
-      const stream = canvas.createPNGStream();
-      stream.pipe(out);
-
-      out.on("finish", () => {
-        const lovePercent = Math.floor(Math.random() * 31) + 70;
-
-        const message = `🥰𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹 𝗽𝗮𝗶𝗿𝗶𝗻𝗴
-・${senderName} 🎀
-・${matchName} 🎀
-💌 𝗪𝗶𝘀𝗵 𝘆𝗼𝘂 𝘁𝘄𝗼 𝗵𝘂𝗻𝗱𝗿𝗲𝗱 𝘆𝗲𝗮𝗿𝘀 𝗼𝗳 𝗵𝗮𝗽𝗽𝗶𝗻𝗲𝘀𝘀 ❤️❤️
-
-𝗟𝗼𝘃𝗲 𝗣𝗲𝗿𝗰𝗲𝗻𝘁𝗮𝗴𝗲: ${lovePercent}% 💙`;
-
-        api.sendMessage(
-          {
-            body: message,
-            attachment: fs.createReadStream(outputPath),
-          },
-          event.threadID,
-          () => {
-            fs.unlinkSync(outputPath);
-          },
-          event.messageID
-        );
-      });
-    } catch (error) {
-      api.sendMessage(
-        "❌ An error occurred while trying to find a match.\n" + error.message,
-        event.threadID,
-        event.messageID
-      );
+    } catch (err) {
+      api.setMessageReaction("❌", messageID, () => {}, true);
+      api.sendMessage(`❌ সমস্যা হয়েছে: ${err.message?.slice(0, 100)}`, threadID, messageID);
     }
   },
+
+  run: async function (ctx) { return module.exports.onStart(ctx); },
 };
+           
